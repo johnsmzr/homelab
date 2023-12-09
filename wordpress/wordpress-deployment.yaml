@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  ports:
+    - name: http  # 定义名为 http 的端口
+      port: 80  # Service 监听的端口号为 80
+      targetPort: 80  # Service 转发流量到 Pod 的端口号为 80
+    - name: https  # 定义名为 https 的端口
+      port: 443  # Service 监听的端口号为 443
+      targetPort: 443  # Service 转发流量到 Pod 的端口号为 443
+  selector:
+    app: wordpress
+    tier: frontend
+  # type: LoadBalancer
+
+---
+
+kind: Ingress  # 创建 Ingress 资源
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: &name wordpress  # 引用锚点指定的名称
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure  # Traefik 路由入口配置
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - host: blog.netvps.top  # 定义访问 Ingress 的域名
+      http:
+        paths:
+          - path: /  # 匹配路径为/
+            pathType: Prefix  # 路径类型为前缀匹配
+            backend:
+              service:
+                name: *name  # 引用锚点指定的 Service 名称
+                port:
+                  name: http  # 引用锚点指定的端口名称
+  tls:
+  - hosts:
+    - blog.netvps.top
+    secretName: blog-netvps-top-tls
+  #  - secretName: default  # 使用名为 default 的 TLS 证书密钥对，用于 HTTPS 访问
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-pv-claim
+  labels:
+    app: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      containers:
+      - image: wordpress:6.2.1-apache
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: wordpress-mysql
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: WORDPRESS_DB_USER
+          value: wordpress
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: wordpress-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pv-claim

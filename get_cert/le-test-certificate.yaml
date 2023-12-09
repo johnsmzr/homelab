@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: blog-netvps-top
+  namespace: default
+spec:
+  secretName: blog-netvps-top-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  commonName: blog.netvps.top
+  dnsNames:
+  - blog.netvps.top

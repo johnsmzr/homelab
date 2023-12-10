@@ -12,6 +12,9 @@ data:
       - job_name: 'kubernetes-apiservers'
         kubernetes_sd_configs:
           - role: endpoints
+      - job_name: 'prometheus'
+        static_configs:
+        - targets: ['localhost:9090']
 
 ---
 
@@ -66,7 +69,7 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: prom/prometheus:v2.20.1
+          image: prom/prometheus:latest
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"

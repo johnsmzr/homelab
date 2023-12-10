@@ -18,6 +18,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: grafana-ingress
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure  # Traefik 路由入口配置
+    cert-manager.io/cluster-issuer: letsencrypt-prod     # 使用 Let's Encrypt 的生产环境证书
 spec:
   rules:
   - host: grafana.netvps.top
@@ -30,6 +34,13 @@ spec:
             name: grafana-service
             port:
               number: 3000
+  tls:   # TLS 配置
+  - hosts:
+    - grafana.netvps.top
+    secretName: grafana-netvps-top-tls 
+    # 使用名为 grafana-netvps-top-tls 的 TLS 证书密钥对，用于 HTTPS 访问
+    # 如果证书不存在，cert-manager 会自动向 Let's Encrypt 申请证书
+    # 申请成功后，会将证书密钥对存储在名为 grafana-netvps-top-tls 的 Secret 中
 
 ---
 apiVersion: v1

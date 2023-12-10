@@ -10,3 +10,4 @@
 - to do: 尝试用StatefulSet部署数据库，而不是hostPath
 
 ### prometheus + grafana: testing
+- testing

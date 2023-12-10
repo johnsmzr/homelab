@@ -11,7 +11,6 @@
     - 尝试用StatefulSet部署数据库mysql，而不是hostPath
     - wordpress 持久化储存（在预先设定连接数据库的情况下好像没必要了）
 
-### prometheus + grafana: testing
-- testing
+### prometheus + grafana: work
 - to do: 
     - 数据持久化储存
